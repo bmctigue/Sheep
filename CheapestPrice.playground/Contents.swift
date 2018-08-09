@@ -15,28 +15,33 @@ class Solution {
     
     var cities: [City] = []
     var visitedCities: Set<Int> = []
-    var lowestPrices: [Int] = Array(repeating: Int.max, count: n)
-    var previousCities: [Int] = Array(repeating: 0, count: n)
+    var lowestPrices: [Int] = []
+    var previousCities: [Int] = []
     
     func findCheapestPrice(_ n: Int, _ flights: [[Int]], _ src: Int, _ dst: Int, _ K: Int) -> Int {
         let edges = flights
+        lowestPrices = Array(repeating: Int.max, count: n)
         lowestPrices[src] = 0
+        previousCities = Array(repeating: 0, count: n)
+        visitedCities.insert(0)
         cities = setUpCities(n)
         cities = setUpFlights(edges, cities: cities)
         
         let src = cities[src]
-        findCheapestPrice(src: src)
+        findCheapestPrice(src: src, maxHops: K, hops: 0)
         
-        return lowestPrices[dst]
+        let lowestPrice = lowestPrices[dst]
+        return lowestPrice == Int.max ? -1 : lowestPrice
     }
     
-    func findCheapestPrice(src: City) {
+    func findCheapestPrice(src: City, maxHops: Int, hops: Int) {
         if src.flights.isEmpty {
             return
         }
         var flights = src.flights
         flights = flights.sorted() { $0.price < $1.price }
-        for flight in flights {
+//        for flight in flights {
+        if let flight = flights.first {
             let source = flight.source
             let destination = flight.destination
             let price = flight.price
@@ -46,12 +51,12 @@ class Solution {
                 lowestPrices[destination] = updatedPrice
                 previousCities[destination] = source
             }
+            
             if !visitedCities.contains(destination) {
-                findCheapestPrice(src: cities[destination])
-            } else {
-                visitedCities.insert(destination)
+                findCheapestPrice(src: cities[destination], maxHops: maxHops, hops: hops)
             }
         }
+        visitedCities.insert(src.cityId)
     }
     
     func setUpCities(_ n: Int) -> [City] {
@@ -78,11 +83,18 @@ class Solution {
     }
 }
 
-let n = 3
-let flights = [[0,1,100],[1,2,100],[0,2,500]]
+//let n = 3
+//let flights = [[0,1,100],[1,2,100],[0,2,500]]
+//let src = 0
+//let dst = 2
+//let K = 0
+
+let n = 4
+let flights = [[0,1,1],[0,2,5],[1,2,1],[2,3,1]]
 let src = 0
-let dst = 2
+let dst = 3
 let K = 1
+
 let solution = Solution()
 
 print(solution.findCheapestPrice(n, flights, src, dst, K))
